@@ -44,14 +44,19 @@ const llm = new ChatOpenAI({ openAIApiKey });
 
 //https://js.langchain.com/docs/modules/model_io/prompts/prompt_templates/#create-a-prompt-template
 const tweetTemplate =
-	"Generate a promotional tweet for a product, from this product description: {procuctDesc}";
+	"Generate a promotional tweet for a product, from this product description: {productDesc}";
 
 const tweetPrompt = PromptTemplate.fromTemplate(tweetTemplate);
 
-const formattedPrompt = await tweetPrompt.format({
-	procuctDesc: "colorful socks",
-});
+// const formattedPrompt = await tweetPrompt.format({
+// 	procuctDesc: "colorful socks",
+// });
 
-console.log(formattedPrompt);
+//https://js.langchain.com/docs/modules/chains/
+//TAKES OUTPUT FROM PROMPT AND PASSES TO LLM
+const tweetChain = tweetPrompt.pipe(llm);
 
-// console.log(openAIApiKey);
+//RUNNING THE CHAIN WE CREATED
+const response = await tweetChain.invoke({ productDesc: "Electric Shoes" });
+
+console.log(response.content);
