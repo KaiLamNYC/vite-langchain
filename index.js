@@ -27,12 +27,8 @@ import { PromptTemplate } from "langchain/prompts";
 //https://js.langchain.com/docs/modules/model_io/output_parsers/string
 import { StringOutputParser } from "langchain/schema/output_parser";
 
-//SUPABASE STUFF
-import { createClient } from "@supabase/supabase-js";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-
 //IMPORT FROM UTILS
+import { combineDocuments } from "./utils/combineDocuments";
 import { retriever } from "/utils/retriever";
 
 document.addEventListener("submit", (e) => {
@@ -40,7 +36,6 @@ document.addEventListener("submit", (e) => {
 	progressConversation();
 });
 
-//VITE SPECIFIC ENV VAR
 const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
 const llm = new ChatOpenAI({ openAIApiKey });
@@ -51,10 +46,18 @@ const standalonePrompt = new PromptTemplate({
 		"Given a question, convert it to a standalone question: {question} standalone question:",
 });
 
+const finalPrompt = new PromptTemplate({
+	inputVariables: ["question", "context"],
+	template:
+		"You are a chatbot knowledgeable about Drake's recent interview, your role is to provide users with accurate and insightful information. The question: '{question}' relates to Drake's interview. Based on the interview, Drake expressed that {context}. If you have more specific questions or need further details, feel free to ask for more insights.",
+});
+
 const standaloneQuestionChain = standalonePrompt
 	.pipe(llm)
 	.pipe(new StringOutputParser())
-	.pipe(retriever);
+	.pipe(retriever)
+	.pipe(combineDocuments)
+	.pipe(finalPrompt);
 
 const response = await standaloneQuestionChain.invoke({
 	question: "what does drake like to wear?",
