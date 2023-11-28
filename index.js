@@ -1,8 +1,3 @@
-// document.addEventListener('submit', (e) => {
-//     e.preventDefault()
-//     progressConversation()
-// })
-
 // const openAIApiKey = process.env.OPENAI_API_KEY
 
 // async function progressConversation() {
@@ -26,37 +21,40 @@
 //     chatbotConversation.scrollTop = chatbotConversation.scrollHeight
 // }
 
-//PROMPT TEMPLATES
-//https://js.langchain.com/docs/modules/model_io/prompts/prompt_templates/
-
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 
+//SUPABASE STUFF
+import { createClient } from "@supabase/supabase-js";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+
+document.addEventListener("submit", (e) => {
+	e.preventDefault();
+	progressConversation();
+});
+
+//VITE SPECIFIC ENV VAR
 const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-//COOKBOOK PROMPT TEMPLATE + LLM
-//https://js.langchain.com/docs/expression_language/cookbook/prompt_llm_parser
-
-//LANGCHAIN AUTOMATICALLY PULL THE KEY FROM process.env.OPENAI_API_KEY IF NOT SUPPLIED
-//LLM VS CHAT MODEL
-//https://js.langchain.com/docs/modules/model_io/models/
 const llm = new ChatOpenAI({ openAIApiKey });
 
-//https://js.langchain.com/docs/modules/model_io/prompts/prompt_templates/#create-a-prompt-template
-const tweetTemplate =
-	"Generate a promotional tweet for a product, from this product description: {productDesc}";
+// const standaloneQuestionTemplate =
+// 	"given a question, convert it to a standalone question: {question} standalone question:";
 
-const tweetPrompt = PromptTemplate.fromTemplate(tweetTemplate);
+// const standaloneQuestionPrompt;
 
-// const formattedPrompt = await tweetPrompt.format({
-// 	procuctDesc: "colorful socks",
-// });
+const standalonePrompt = new PromptTemplate({
+	inputVariables: ["question"],
+	template:
+		"Given a question, convert it to a standalone question: {question} standalone question:",
+});
 
-//https://js.langchain.com/docs/modules/chains/
-//TAKES OUTPUT FROM PROMPT AND PASSES TO LLM
-const tweetChain = tweetPrompt.pipe(llm);
+const standaloneQuestionChain = standalonePrompt.pipe(llm);
 
-//RUNNING THE CHAIN WE CREATED
-const response = await tweetChain.invoke({ productDesc: "Electric Shoes" });
+const response = await standaloneQuestionChain.invoke({
+	question:
+		"what are the techincal requirements for running Scrimba? i only have a very old laptop which is not that powerful",
+});
 
-console.log(response.content);
+console.log(response);
