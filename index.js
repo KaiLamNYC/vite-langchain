@@ -31,13 +31,17 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 import { combineDocuments } from "./utils/combineDocuments";
 import { retriever } from "/utils/retriever";
 
+import {
+	RunnablePassthrough,
+	RunnableSequence,
+} from "langchain/schema/runnable";
+
 document.addEventListener("submit", (e) => {
 	e.preventDefault();
 	progressConversation();
 });
 
 const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
 const llm = new ChatOpenAI({ openAIApiKey });
 
 const standalonePrompt = new PromptTemplate({
@@ -52,15 +56,31 @@ const finalPrompt = new PromptTemplate({
 		"You are a chatbot knowledgeable about Drake's recent interview, your role is to provide users with accurate and insightful information. The question: '{question}' relates to Drake's interview. Based on the interview, Drake expressed that {context}. If you have more specific questions or need further details, feel free to ask for more insights.",
 });
 
-const standaloneQuestionChain = standalonePrompt
-	.pipe(llm)
-	.pipe(new StringOutputParser())
-	.pipe(retriever)
-	.pipe(combineDocuments)
-	.pipe(finalPrompt);
+const chain = RunnableSequence.from([
+	standalonePrompt,
+	llm,
+	new StringOutputParser(),
+	retriever,
+	{ context: combineDocuments, question: new RunnablePassthrough() },
+	// combineDocuments,
+	finalPrompt,
+	llm,
+	new StringOutputParser(),
+]);
 
-const response = await standaloneQuestionChain.invoke({
-	question: "what does drake like to wear?",
+// const standaloneQuestionChain = standalonePrompt
+// 	.pipe(llm)
+// 	.pipe(new StringOutputParser())
+// 	.pipe(retriever)
+// 	.pipe(combineDocuments)
+// 	.pipe(finalPrompt);
+
+// const response = await standaloneQuestionChain.invoke({
+// 	question: "what does drake like to wear?",
+// });
+
+const response = await chain.invoke({
+	question: "what are a few of drakes albums?",
 });
 
 console.log(response);
