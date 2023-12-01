@@ -1,26 +1,3 @@
-// const openAIApiKey = process.env.OPENAI_API_KEY
-
-// async function progressConversation() {
-//     const userInput = document.getElementById('user-input')
-//     const chatbotConversation = document.getElementById('chatbot-conversation-container')
-//     const question = userInput.value
-//     userInput.value = ''
-
-//     // add human message
-//     const newHumanSpeechBubble = document.createElement('div')
-//     newHumanSpeechBubble.classList.add('speech', 'speech-human')
-//     chatbotConversation.appendChild(newHumanSpeechBubble)
-//     newHumanSpeechBubble.textContent = question
-//     chatbotConversation.scrollTop = chatbotConversation.scrollHeight
-
-//     // add AI message
-//     const newAiSpeechBubble = document.createElement('div')
-//     newAiSpeechBubble.classList.add('speech', 'speech-ai')
-//     chatbotConversation.appendChild(newAiSpeechBubble)
-//     newAiSpeechBubble.textContent = result
-//     chatbotConversation.scrollTop = chatbotConversation.scrollHeight
-// }
-
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 
@@ -86,8 +63,30 @@ const chain = RunnableSequence.from([
 	answerChain,
 ]);
 
-const response = await chain.invoke({
-	question: "what is one thing drake likes to wear?",
-});
+async function progressConversation() {
+	const userInput = document.getElementById("user-input");
+	const chatbotConversation = document.getElementById(
+		"chatbot-conversation-container"
+	);
+	const question = userInput.value;
+	userInput.value = "";
 
-console.log(response);
+	// add human message
+	const newHumanSpeechBubble = document.createElement("div");
+	newHumanSpeechBubble.classList.add("speech", "speech-human");
+	chatbotConversation.appendChild(newHumanSpeechBubble);
+	newHumanSpeechBubble.textContent = question;
+	chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
+
+	//what is one thing drake likes to wear?
+	const response = await chain.invoke({
+		question: question,
+	});
+
+	// add AI message
+	const newAiSpeechBubble = document.createElement("div");
+	newAiSpeechBubble.classList.add("speech", "speech-ai");
+	chatbotConversation.appendChild(newAiSpeechBubble);
+	newAiSpeechBubble.textContent = response;
+	chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
+}
