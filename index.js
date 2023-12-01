@@ -53,34 +53,30 @@ const standalonePrompt = new PromptTemplate({
 const finalPrompt = new PromptTemplate({
 	inputVariables: ["question", "context"],
 	template:
-		"You are a chatbot knowledgeable about Drake's recent interview, your role is to provide users with accurate and insightful information. The question: '{question}' relates to Drake's interview. Based on the interview, Drake expressed that {context}. If you have more specific questions or need further details, feel free to ask for more insights.",
+		"You are a helpful and enthusiastic chatbot thats an expert on Drake's recent interview, you are tasked to provide accurate and insightful responses. Question posed: '{question}'. In the context of Drake's interview, he remarked: {context}. Should you require additional specifics or further clarification on this or any other aspect of the interview, please do not hesitate to inquire for more in-depth insights. Always speak as if you were talking to a friend.",
 });
 
-const chain = RunnableSequence.from([
+const standaloneChain = RunnableSequence.from([
 	standalonePrompt,
 	llm,
 	new StringOutputParser(),
-	retriever,
-	{ context: combineDocuments, question: new RunnablePassthrough() },
-	// combineDocuments,
+]);
+
+const finalChain = RunnableSequence.from([
 	finalPrompt,
 	llm,
 	new StringOutputParser(),
 ]);
 
-// const standaloneQuestionChain = standalonePrompt
-// 	.pipe(llm)
-// 	.pipe(new StringOutputParser())
-// 	.pipe(retriever)
-// 	.pipe(combineDocuments)
-// 	.pipe(finalPrompt);
-
-// const response = await standaloneQuestionChain.invoke({
-// 	question: "what does drake like to wear?",
-// });
+const chain = RunnableSequence.from([
+	standaloneChain,
+	retriever,
+	{ context: combineDocuments, question: new RunnablePassthrough() },
+	finalChain,
+]);
 
 const response = await chain.invoke({
-	question: "what are a few of drakes albums?",
+	question: "what is one thing drake likes to wear?",
 });
 
 console.log(response);
