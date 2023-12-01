@@ -62,17 +62,28 @@ const standaloneChain = RunnableSequence.from([
 	new StringOutputParser(),
 ]);
 
-const finalChain = RunnableSequence.from([
+const retrieverChain = RunnableSequence.from([
+	(prevResult) => prevResult.standalone_question,
+	retriever,
+	combineDocuments,
+]);
+
+const answerChain = RunnableSequence.from([
 	finalPrompt,
 	llm,
 	new StringOutputParser(),
 ]);
 
 const chain = RunnableSequence.from([
-	standaloneChain,
-	retriever,
-	{ context: combineDocuments, question: new RunnablePassthrough() },
-	finalChain,
+	{
+		standalone_question: standaloneChain,
+		original_input: new RunnablePassthrough(),
+	},
+	{
+		context: retrieverChain,
+		question: ({ original_input }) => original_input.question,
+	},
+	answerChain,
 ]);
 
 const response = await chain.invoke({
